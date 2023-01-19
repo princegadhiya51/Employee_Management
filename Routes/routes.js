@@ -13,7 +13,7 @@ Router.post("/register", async (req, res) => {
 
   if (data != null) {
     res.status(400).json("User already exists.");
-  } else {
+  }else {
     let userData = req.body;
 
     const salt = await bcryptjs.genSalt(10);
@@ -25,7 +25,32 @@ Router.post("/register", async (req, res) => {
   }
 });
 
-Router.post("/insert", async (req, res) => {
+//login
+Router.post("/login", async (req,res)=>{
+  const data = await User.findOne({where:{username:req.body.username}})
+
+  if(data == null)
+  {
+    res.status(400).json("User not found.")
+  }
+  else{
+    const validCred = await bcryptjs.compare(req.body.password,data.password)
+    if(!validCred)
+    {
+      res.status(400).json("Invalid password.")
+    }
+    else
+    {
+      const user = {username : req.body.username}
+
+      const accessToken = jwt.sign(user,process.env.ACCESS_TOKEN)
+      res.status(200).json({accessToken:accessToken})
+    }
+  }
+})
+
+// add employee
+Router.post("/addemployee", authenticateToken ,async (req, res) => {
   const data = req.body;
   await Employee.create(data)
     .then(() => {
@@ -36,7 +61,8 @@ Router.post("/insert", async (req, res) => {
     });
 });
 
-Router.post("/insertDep", async (req, res) => {
+// add department
+Router.post("/adddepartment", authenticateToken ,async (req, res) => {
   const data = req.body;
   await Department.create(data)
     .then(() => {
@@ -47,15 +73,36 @@ Router.post("/insertDep", async (req, res) => {
     });
 });
 
-Router.get("/get", async (req, res) => {
+//get all employee 
+Router.get("/getallemployee",authenticateToken ,async (req, res) => {
   const data = await Employee.findAll();
+  res.json(data);
+});
+
+//get all department 
+Router.get("/getalldepartment",authenticateToken ,async (req, res) => {
+  const data = await Department.findAll();
+  res.json(data);
+});
+
+//get particular employee 
+Router.get("/employee/:id",authenticateToken ,async (req, res) => {
+  const id = req.params.id
+  const data = await Employee.findByPk(id)
+  res.json(data);
+});
+
+//get particular department
+Router.get("/department/:id",authenticateToken ,async (req, res) => {
+  const id = req.params.id
+  const data = await Department.findByPk(id)
   res.json(data);
 });
 
 //jwt token authentication
 function authenticateToken(req, res, next) {
   if (req.headers.hasOwnProperty("authorization") === false) {
-    res.status(403);
+    res.status(403).json("No authorization token found.");
   } else {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];

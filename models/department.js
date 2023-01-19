@@ -2,7 +2,7 @@ const Sequelize = require("sequelize");
 const connection = require("../connection");
 
 const Department = connection.define("department",{
-    name:Sequelize.STRING,
+    name:{ type: Sequelize.STRING, allowNull: false, unique: true },
 })
 
 Department.sync().then(()=>{})
