@@ -13,11 +13,11 @@ Router.post("/register", async (req, res) => {
 
   if (data != null) {
     res.status(400).json("User already exists.");
-  }else {
+  } else {
     let userData = req.body;
 
     const salt = await bcryptjs.genSalt(10);
-    userData.password = await  bcryptjs.hash(userData.password, salt);
+    userData.password = await bcryptjs.hash(userData.password, salt);
 
     await User.create(userData).then(() => {
       res.status(200).json("Registered successfully.");
@@ -26,77 +26,136 @@ Router.post("/register", async (req, res) => {
 });
 
 //login
-Router.post("/login", async (req,res)=>{
-  const data = await User.findOne({where:{username:req.body.username}})
+Router.post("/login", async (req, res) => {
+  const data = await User.findOne({ where: { username: req.body.username } });
 
-  if(data == null)
-  {
-    res.status(400).json("User not found.")
-  }
-  else{
-    const validCred = await bcryptjs.compare(req.body.password,data.password)
-    if(!validCred)
-    {
-      res.status(400).json("Invalid password.")
-    }
-    else
-    {
-      const user = {username : req.body.username}
+  if (data == null) {
+    res.status(400).json("User not found.");
+  } else {
+    const validCred = await bcryptjs.compare(req.body.password, data.password);
+    if (!validCred) {
+      res.status(400).json("Invalid password.");
+    } else {
+      const user = { username: req.body.username };
 
-      const accessToken = jwt.sign(user,process.env.ACCESS_TOKEN)
-      res.status(200).json({accessToken:accessToken})
+      const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN);
+      res.status(200).json({ accessToken: accessToken });
     }
   }
-})
+});
 
 // add employee
-Router.post("/addemployee", authenticateToken ,async (req, res) => {
+Router.post("/addemployee", authenticateToken, async (req, res) => {
   const data = req.body;
   await Employee.create(data)
     .then(() => {
       res.status(200).json("Data inserted.");
     })
     .catch((err) => {
-      res.status(400).json("Failed." + err);
+      res.status(400).json(err.errors[0].message);
     });
 });
 
 // add department
-Router.post("/adddepartment", authenticateToken ,async (req, res) => {
+Router.post("/adddepartment", authenticateToken, async (req, res) => {
   const data = req.body;
   await Department.create(data)
     .then(() => {
       res.status(200).json("Data inserted.");
     })
     .catch((err) => {
-      res.status(400).json("Failed." + err);
+      res.status(400).json(err.errors[0].message);
     });
 });
 
-//get all employee 
-Router.get("/getallemployee",authenticateToken ,async (req, res) => {
-  const data = await Employee.findAll();
-  res.json(data);
+//get all employee
+Router.get("/getallemployee", authenticateToken, async (req, res) => {
+  await Employee.findAll()
+    .then((data) => {
+      res.status(200).json(data);
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
 });
 
-//get all department 
-Router.get("/getalldepartment",authenticateToken ,async (req, res) => {
-  const data = await Department.findAll();
-  res.json(data);
+//get all department
+Router.get("/getalldepartment", authenticateToken, async (req, res) => {
+  await Department.findAll()
+    .then((data) => {
+      res.status(200).json(data);
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
 });
 
-//get particular employee 
-Router.get("/employee/:id",authenticateToken ,async (req, res) => {
-  const id = req.params.id
-  const data = await Employee.findByPk(id)
-  res.json(data);
+//get particular employee
+Router.get("/employee/:id", authenticateToken, async (req, res) => {
+  await Employee.findOne({ where: { id: req.params.id } })
+    .then((data) => {
+      res.status(200).json(data);
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
 });
 
 //get particular department
-Router.get("/department/:id",authenticateToken ,async (req, res) => {
-  const id = req.params.id
-  const data = await Department.findByPk(id)
-  res.json(data);
+Router.get("/department/:id", authenticateToken, async (req, res) => {
+  await Department.findOne({ where: { id: req.params.id } })
+    .then((data) => {
+      res.status(200).json(data);
+    })
+    .then((err) => {
+      res.status(400).json(err);
+    });
+});
+
+//delete department
+Router.delete("/deletedepartment/:id", authenticateToken, async (req, res) => {
+  await Department.destroy({ where: { id: req.params.id } })
+    .then((data) => {
+      res.status(200).json(data);
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
+});
+
+//delete employee
+Router.delete("/deleteemployee/:id", authenticateToken, async (req, res) => {
+  await Employee.destroy({ where: { id: req.params.id } })
+    .then((data) => {
+      res.status(200).json(data);
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
+});
+
+//update department
+Router.put("/updatedepartment/:id", authenticateToken, async (req, res) => {
+  const data = req.body;
+  await Department.update(data, { where: { id: req.params.id } })
+    .then((data) => {
+      res.json(data);
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
+});
+
+//update employee
+Router.put("/updateemployee/:id", authenticateToken, async (req, res) => {
+  const data = req.body;
+  await Employee.update(data, { where: { id: req.params.id } })
+    .then((data) => {
+      res.json(data);
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
 });
 
 //jwt token authentication
