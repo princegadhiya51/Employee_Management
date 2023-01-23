@@ -8,10 +8,10 @@ Router.post("/addemployee", authenticateToken, async (req, res) => {
   const data = req.body;
   await Employee.create(data)
     .then(() => {
-      res.status(200).json("Data inserted.");
+      return res.status(200).json("Employee added successfully.");
     })
     .catch((err) => {
-      res.status(400).json(err.errors[0].message);
+      return res.status(400).json(err.errors[0].message);
     });
 });
 
@@ -19,10 +19,10 @@ Router.post("/addemployee", authenticateToken, async (req, res) => {
 Router.get("/getallemployee", authenticateToken, async (req, res) => {
   await Employee.findAll()
     .then((data) => {
-      res.status(200).json(data);
+      return res.status(200).json(data);
     })
     .catch((err) => {
-      res.status(400).json(err);
+      return res.status(400).json(err);
     });
 });
 
@@ -30,10 +30,13 @@ Router.get("/getallemployee", authenticateToken, async (req, res) => {
 Router.get("/employee/:id", authenticateToken, async (req, res) => {
   await Employee.findOne({ where: { id: req.params.id } })
     .then((data) => {
-      res.status(200).json(data);
+      if (data === null) {
+        return res.status(404).json("Employee not found");
+      }
+      return res.status(200).json(data);
     })
     .catch((err) => {
-      res.status(400).json(err);
+      return res.status(400).json(err);
     });
 });
 
@@ -41,7 +44,10 @@ Router.get("/employee/:id", authenticateToken, async (req, res) => {
 Router.delete("/deleteemployee/:id", authenticateToken, async (req, res) => {
   await Employee.destroy({ where: { id: req.params.id } })
     .then((data) => {
-      res.status(200).json(data);
+      if (data === 0) {
+        return res.status(404).json("Employee not found");
+      }
+      return res.status(200).json("Employee deleted successfully.");
     })
     .catch((err) => {
       res.status(400).json(err);
@@ -53,10 +59,13 @@ Router.put("/updateemployee/:id", authenticateToken, async (req, res) => {
   const data = req.body;
   await Employee.update(data, { where: { id: req.params.id } })
     .then((data) => {
-      res.json(data);
+      if (data[0] === 0) {
+        return res.status(404).json("Employee not found");
+      }
+      return res.json("Employee updated successfully.");
     })
     .catch((err) => {
-      res.status(400).json(err);
+      return res.status(400).json(err);
     });
 });
 
