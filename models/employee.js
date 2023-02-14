@@ -76,7 +76,8 @@ const Employee = connection.define("employee", {
 });
 
 Employee.belongsTo(Department, {
-  foreignKey: "department_id", onDelete:'CASCADE'
+  foreignKey: "department_id",
+  onDelete: "CASCADE",
 });
 
 Employee.sync().then(() => {});
